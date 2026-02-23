@@ -5,11 +5,7 @@
     "types": ["docker.secretdriver/1.0","docker.secretprovider/1.0"],
     "socket": "plugin.sock"
   },
-<<<<<<< HEAD
-  "entrypoint": ["./swarm-external-secrets"],
-=======
   "entrypoint": ["/root/vault-secrets-plugin"],
->>>>>>> 14616c7 (updated .gitignore, config.json,Dockerfile, driver.go, main.go, build.sh, smoke-test.sh)
   "workdir": "/root",
   "linux": {
     "capabilities": ["CAP_SYS_ADMIN"]
@@ -103,12 +99,12 @@
     },
     {
       "name": "ENABLE_ROTATION",
-      "description": "Enable OpenBao secret rotation (true/false)",
+      "description": "Enable secret rotation (true/false)",
       "settable": ["value"]
     },
     {
       "name": "ROTATION_INTERVAL",
-      "description": "OpenBao secret rotation check interval (e.g., 5m, 1h)",
+      "description": "Secret rotation check interval (e.g., 5m, 1h)",
       "settable": ["value"]
     },
     {
@@ -147,45 +143,34 @@
       "settable": ["value"]
     },
     {
-      "name" : "AZURE_ACCESS_TOKEN",
+      "name": "AZURE_ACCESS_TOKEN",
       "description": "Azure access token for Key Vault",
       "settable": ["value"]
     },
     {
-      "name" : "GCP_PROJECT_ID",
+      "name": "GCP_PROJECT_ID",
       "description": "GCP project ID",
       "settable": ["value"]
     },
     {
-      "name" : "GOOGLE_APPLICATION_CREDENTIALS",
+      "name": "GOOGLE_APPLICATION_CREDENTIALS",
       "description": "Google application credentials required for GCP Secrets manager",
       "settable": ["value"]
     },
     {
-      "name" : "GCP_CREDENTIALS_JSON",
+      "name": "GCP_CREDENTIALS_JSON",
       "description": "Google credentials json required for GCP Secrets manager",
       "settable": ["value"]
     },
     {
-<<<<<<< HEAD
       "name": "ENABLE_MONITORING",
-      "description": "Enable Monitoring secret rotation (true/false) default true",
+      "description": "Enable monitoring web interface (true/false)",
       "settable": ["value"]
     },
     {
       "name": "MONITORING_PORT",
-      "description": "default 8080",
+      "description": "Monitoring web interface port (default 8080)",
       "settable": ["value"]
-=======
-  "name": "ENABLE_MONITORING",
-  "description": "Enable monitoring web interface (true/false)",
-  "settable": ["value"]
-    },
-    {
-  "name": "ENABLE_ROTATION",
-  "description": "Enable secret rotation (true/false)",
-  "settable": ["value"]
->>>>>>> 14616c7 (updated .gitignore, config.json,Dockerfile, driver.go, main.go, build.sh, smoke-test.sh)
     },
     {
       "name": "uid",
