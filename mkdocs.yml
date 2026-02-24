@@ -61,5 +61,5 @@ nav:
   - Monitoring: monitoring.md
   - Rotation: rotation.md
   - Debugging: debugging.md
-
+  - Contributing Guidelines: CONTRIBUTING.md
 copyright: "Copyright &copy; 2025, Swarm External Secrets contributors"
