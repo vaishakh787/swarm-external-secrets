@@ -408,7 +408,7 @@ func (d *SecretsDriver) updateDockerSecret(secretName string, newValue []byte) e
 	}
 
 	// Generate a unique name for the new secret version
-	newSecretName := fmt.Sprintf("%s-%d", secretName, time.Now().Unix())
+	newSecretName := fmt.Sprintf("%s-%d", secretName, time.Now().UnixNano())
 
 	// Create new secret with versioned name and same labels but updated value
 	newSecretSpec := swarm.SecretSpec{
@@ -429,10 +429,9 @@ func (d *SecretsDriver) updateDockerSecret(secretName string, newValue []byte) e
 
 	// Update all services that use this secret to point to the new version
 	if err := d.updateServicesSecretReference(secretName, newSecretName, createResponse.ID); err != nil {
-		// If we can't update services, remove the new secret and return error
-		err := d.dockerClient.SecretRemove(ctx, createResponse.ID)
-		if err != nil {
-			log.Warnf("Failed to remove new secret version %s after failed update: %v", createResponse.ID, err)
+		// try to remove the new secret since service update failed
+		if cleanupErr := d.dockerClient.SecretRemove(ctx, createResponse.ID); cleanupErr != nil {
+			log.Warnf("failed to remove new secret %s after service update error: %v", createResponse.ID, cleanupErr)
 		}
 		return fmt.Errorf("failed to update services to use new secret: %v", err)
 	}

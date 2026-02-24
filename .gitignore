@@ -34,6 +34,10 @@ go.work.sum
 # .vscode/
 
 # remove the go binary
+# MkDocs build output
+.site/*
+site/*
+# remove the go binary 
 ./vault-swarm
 ./installer
 ./test-build
@@ -45,7 +49,6 @@ approle.token
 # plugin build artifacts
 scripts/plugin/rootfs/
 scripts/plugin/
-<<<<<<< HEAD
 scripts/plugin/rootfs/*
 
 # OS artifacts
@@ -54,9 +57,4 @@ scripts/plugin/rootfs/*.DS_Store
 
 # MkDocs build output
 site/
-=======
 
-# OS artifacts
-scripts/plugin/rootfs/*.DS_Store
-.DS_Store
->>>>>>> 14616c7 (updated .gitignore, config.json,Dockerfile, driver.go, main.go, build.sh, smoke-test.sh)

@@ -1,6 +1,13 @@
 name: lefthook pre validate
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lefthook:
@@ -9,23 +16,45 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check branch is up to date with main
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main --quiet
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "::error::This branch is out of date with main. Please rebase or merge main into your branch before merging."
+            exit 1
+          fi
+          echo "Branch is up to date with main ✔"
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.2'
+          go-version: '1.25.7'
           cache: true
 
       - name: Install lefthook and linters
         run: |
-          go install github.com/evilmartians/lefthook@latest
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/evilmartians/lefthook/v2@v2.1.1
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.10.1
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.23.0
 
       - name: Run lefthook pre-commit hooks
-        run: lefthook run pre-commit --all-files 
+        run: lefthook run pre-commit --all-files
+        env:
+          CI: "true"
+
+      - name: Run golangci-lint
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Only report issues introduced by this PR
+            golangci-lint run --new-from-rev=${{ github.event.pull_request.base.sha }} ./...
+          else
+            # Full scan on push to main
+            golangci-lint run ./...
+          fi
 
       - name: Check for uncommitted changes
         run: git diff --exit-code
