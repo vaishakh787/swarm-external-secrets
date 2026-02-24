@@ -406,7 +406,7 @@ func (d *SecretsDriver) updateDockerSecret(secretName string, newValue []byte) e
 	}
 
 	// Generate a unique name for the new secret version
-	newSecretName := fmt.Sprintf("%s-%d", secretName, time.Now().Unix())
+	newSecretName := fmt.Sprintf("%s-%d", secretName, time.Now().UnixNano())
 
 	// Create new secret with versioned name and same labels but updated value
 	newSecretSpec := swarm.SecretSpec{
