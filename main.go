@@ -52,7 +52,7 @@ func main() {
 
 	// Serve the plugin - must match config.json socket name
 	log.Println("Starting Vault secrets provider plugin...")
-	if err := handler.ServeUnix("/run/docker/plugins/plugin.sock", 0); err != nil {
+	if err := handler.ServeUnix("plugin", 0); err != nil {
 		log.Fatalf("Failed to serve plugin: %v", err)
 	}
 }
