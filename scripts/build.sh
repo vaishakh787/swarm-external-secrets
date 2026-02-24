@@ -43,7 +43,7 @@ echo -e "${DEF}Create the plugin${DEF}"
 docker plugin create ${DOCKER_USERNAME}swarm-external-secrets:latest ./plugin
 
 echo -e "${DEF}Clean up plugin directory${DEF}"
-#rm -rf ./plugin
+rm -rf ./plugin
 
 # If docker_username is not set, do not attempt to push
 if [ -z "$DOCKER_USERNAME" ]; then

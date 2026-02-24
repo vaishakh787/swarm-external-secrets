@@ -27,7 +27,7 @@ type OpenBaoConfig struct {
 	AuthMethod string
 	CACert     string
 	ClientCert string
-	ClientKey  string // #nosec G117
+	ClientKey  string
 }
 
 // Initialize sets up the OpenBao provider with the given configuration
