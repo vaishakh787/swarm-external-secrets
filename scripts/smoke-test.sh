@@ -35,7 +35,7 @@ init_swarm() {
   log "Checking Docker Swarm status..."
   if ! docker info 2>/dev/null | grep -q "Swarm: active"; then
     log "Docker Swarm not active. Initializing..."
-    docker swarm init >/dev/null
+    docker swarm init >/dev/null 2>&1 || true
   else
     log "Docker Swarm already active"
   fi
