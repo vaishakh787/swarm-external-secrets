@@ -74,13 +74,15 @@ func NewDriver() (*SecretsDriver, error) {
 
 	// Initialize the provider
 	if err := provider.Initialize(settings); err != nil {
-		log.Warnf("Provider initialization warning (will retry on request): %v", err)
+		log.Errorf("failed to initialize %s provider: %v", config.ProviderType, err)
+		return nil, fmt.Errorf("failed to initialize %s provider: %v", config.ProviderType, err)
 	}
 
 	// Create Docker client
 	dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
 	if err != nil {
-		log.Warnf("Failed to create docker client: %v", err)
+		log.Errorf("failed to create docker client: %v", err)
+		return nil, fmt.Errorf("failed to create docker client: %v", err)
 	}
 
 	// Create context for monitoring
