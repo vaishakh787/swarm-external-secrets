@@ -5,10 +5,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o vault-secrets-plugin .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o swarm-external-secrets .
 
-FROM alpine:3.19
+FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-WORKDIR /root
-COPY --from=builder /app/vault-secrets-plugin /root/vault-secrets-plugin
-CMD ["/root/vault-secrets-plugin"]
+WORKDIR /root/
+
+COPY --from=builder /app/swarm-external-secrets .
+
+CMD ["./swarm-external-secrets"]
