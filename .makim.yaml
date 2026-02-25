@@ -3,36 +3,46 @@
 # Tasks for the shell scripts in the ./scripts directory
 # ----------------------------------------------------------------------
 backend: bash
+
 groups:
   scripts:
     tasks:
       build:
         help: Build project artifacts
         run: ./scripts/build.sh
+
       test:
         help: Run unit/integration tests
         run: ./scripts/test.sh
+
       run:
         help: Launch the application locally
         run: ./scripts/run.sh
+
       deploy:
         help: Deploy the application to the target environment
         run: ./scripts/deploy.sh
+
       cleanup:
         help: Remove temporary files, containers, and other build artifacts
         run: ./scripts/cleanup.sh
+
       check_plugin_service:
         help: Health-check the plugin service
         run: ./scripts/check_plugin_service.sh
+
       demo_rotation:
         help: Run demo rotation scenario
         run: ./scripts/demo-rotation.sh
+      
       docs:
         help: Build documentation
-        run: python3 -m mkdocs build
+        run:  python3 -m mkdocs build
+
       linter:
         help: Run linting tools
         run: ./scripts/linter.sh
+        
       smoke-test-vault:
         help: Run Vault smoke test to validate plugin end-to-end
         run: bash ./scripts/smoke-test.sh vault
