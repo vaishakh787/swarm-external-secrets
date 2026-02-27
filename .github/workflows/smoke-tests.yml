@@ -2,6 +2,7 @@ name: Smoke Tests
 
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        provider: [vault,openbao]
+        provider: [vault, openbao]
 
     steps:
       - name: Checkout
@@ -23,4 +24,4 @@ jobs:
         run: docker swarm init
 
       - name: Run smoke test for ${{ matrix.provider }}
-        run: bash scripts/smoke-test.sh ${{ matrix.provider }}
+        run: bash scripts/smoke-test-${{ matrix.provider }}.sh
