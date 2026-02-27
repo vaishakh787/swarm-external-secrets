@@ -49,7 +49,7 @@ done
 success "OpenBao is ready."
 
 # Setup policy
-info "STEP 2: Policy defined (will be applied in step 3)."
+info "Policy defined (will be applied in step 3)."
 
 # Apply policy on openbao
 info "Applying policy to OpenBao..."
