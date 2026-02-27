@@ -5,17 +5,16 @@ source ./smoke-test-helper.sh
 
 # Configuration
 VAULT_CONTAINER="smoke-vault"
-VAULT_PORT=8200
 VAULT_ROOT_TOKEN="smoke-root-token"
-VAULT_ADDR="http://127.0.0.1:${VAULT_PORT}"
+VAULT_ADDR="http://127.0.0.1:8200"
 STACK_NAME="smoke-vault"
 SECRET_NAME="smoke_secret"
 SECRET_PATH="database/mysql"
 SECRET_FIELD="password"
 SECRET_VALUE="vault-smoke-pass-v1"
 SECRET_VALUE_ROTATED="vault-smoke-pass-v2"
-COMPOSE_FILE="/tmp/smoke-vault-compose.yml"
-POLICY_FILE="/tmp/smoke-vault-policy.hcl"
+COMPOSE_FILE="$(dirname "$0")/smoke-vault-compose.yml"
+POLICY_FILE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/vault_conf/admin.hcl"
 
 # Cleanup trap
 cleanup() {
@@ -25,7 +24,6 @@ cleanup() {
     docker stop "${VAULT_CONTAINER}" 2>/dev/null || true
     docker rm   "${VAULT_CONTAINER}" 2>/dev/null || true
     remove_plugin
-    rm -f "${COMPOSE_FILE}" "${POLICY_FILE}"
 }
 trap cleanup EXIT
 
@@ -33,107 +31,49 @@ trap cleanup EXIT
 info "Starting HashiCorp Vault dev container..."
 docker run -d \
     --name "${VAULT_CONTAINER}" \
-    --network host \
+    -p 8200:8200 \
     -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_ROOT_TOKEN}" \
-    -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" \
     hashicorp/vault:latest server -dev
 
 # Wait for Vault to be ready
 info "Waiting for Vault to be ready..."
 elapsed=0
-until docker exec "${VAULT_CONTAINER}" \
-        vault status -address="${VAULT_ADDR}" &>/dev/null; do
+until docker exec "${VAULT_CONTAINER}" vault status -address="http://127.0.0.1:8200" >/dev/null 2>&1; do
     sleep 2
     elapsed=$((elapsed + 2))
     [ "${elapsed}" -lt 30 ] || die "Vault did not become ready within 30s."
 done
 success "Vault is ready."
 
-# Setup policy file
-info "Writing policy file..."
-cat > "${POLICY_FILE}" << 'EOF'
-path "secret/data/database/mysql" {
-  capabilities = ["create", "update", "read", "list"]
-}
-path "secret/metadata/database/mysql" {
-  capabilities = ["list"]
-}
-EOF
-success "Policy file written."
-
-# Apply policy on vault
+# Apply policy from vault_conf/admin.hcl
 info "Applying policy to Vault..."
+docker cp "${POLICY_FILE}" "${VAULT_CONTAINER}:/tmp/admin.hcl"
 docker exec "${VAULT_CONTAINER}" \
-    vault policy write -address="${VAULT_ADDR}" smoke-policy - << 'EOF'
-path "secret/data/database/mysql" {
-  capabilities = ["create", "update", "read", "list"]
-}
-path "secret/metadata/database/mysql" {
-  capabilities = ["list"]
-}
-EOF
+    env VAULT_ADDR="http://127.0.0.1:8200" VAULT_TOKEN="${VAULT_ROOT_TOKEN}" \
+    vault policy write smoke-policy /tmp/admin.hcl
 success "Policy applied."
 
 # Add passwords (write test secret)
 info "Writing test secret to Vault..."
 docker exec "${VAULT_CONTAINER}" \
+    env VAULT_ADDR="http://127.0.0.1:8200" VAULT_TOKEN="${VAULT_ROOT_TOKEN}" \
     vault kv put \
-    -address="${VAULT_ADDR}" \
     "secret/${SECRET_PATH}" \
     "${SECRET_FIELD}=${SECRET_VALUE}"
 success "Secret written: secret/${SECRET_PATH} ${SECRET_FIELD}=${SECRET_VALUE}"
 
-# Create swarm stack definition
-info "Creating swarm stack compose file..."
-cat > "${COMPOSE_FILE}" << EOF
-version: '3.8'
-
-services:
-  app:
-    image: busybox:latest
-    command: >
-      sh -c "
-        while true; do
-          echo 'Current secret:' && cat /run/secrets/${SECRET_NAME}
-          sleep 5
-        done
-      "
-    secrets:
-      - ${SECRET_NAME}
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-    networks:
-      - smoke-network
-
-secrets:
-  ${SECRET_NAME}:
-    driver: ${PLUGIN_NAME}
-    labels:
-      vault_path: "${SECRET_PATH}"
-      vault_field: "${SECRET_FIELD}"
-
-networks:
-  smoke-network:
-    driver: overlay
-EOF
-success "Stack compose file created."
-
-
+# Get the tmp auth token from vault
 info "Getting auth token from Vault..."
 VAULT_TOKEN=$(docker exec "${VAULT_CONTAINER}" \
+    env VAULT_ADDR="http://127.0.0.1:8200" VAULT_TOKEN="${VAULT_ROOT_TOKEN}" \
     vault token create \
-        -address="${VAULT_ADDR}" \
-        -policy="smoke-policy" \
-        -field=token)
+    -policy="smoke-policy" \
+    -field=token)
 success "Got auth token: ${VAULT_TOKEN}"
 
 # Put the auth token in the plugin
 info "Building plugin and setting Vault auth token..."
 build_plugin
-
-echo -e "${RED}Set plugin configuration${DEF}"
 docker plugin set "${PLUGIN_NAME}" \
     SECRETS_PROVIDER="vault" \
     VAULT_ADDR="${VAULT_ADDR}" \
@@ -165,8 +105,8 @@ verify_secret "${STACK_NAME}" "app" "${SECRET_NAME}" "${SECRET_VALUE}" 60
 # Rotate the password and verify
 info "Rotating secret in Vault..."
 docker exec "${VAULT_CONTAINER}" \
+    env VAULT_ADDR="http://127.0.0.1:8200" VAULT_TOKEN="${VAULT_ROOT_TOKEN}" \
     vault kv put \
-    -address="${VAULT_ADDR}" \
     "secret/${SECRET_PATH}" \
     "${SECRET_FIELD}=${SECRET_VALUE_ROTATED}"
 success "Secret rotated to: ${SECRET_VALUE_ROTATED}"
@@ -180,6 +120,4 @@ log_stack "${STACK_NAME}" "app"
 info "Verifying rotated secret value..."
 verify_secret "${STACK_NAME}" "app" "${SECRET_NAME}" "${SECRET_VALUE_ROTATED}" 60
 
-success "============================================"
-success " Vault smoke test PASSED "
-success "============================================"
+success "Vault smoke test PASSED"
