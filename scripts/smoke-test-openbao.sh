@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-
 set -ex
 cd -- "$(dirname -- "$0")" || exit 1
 source ./smoke-test-helper.sh
@@ -15,8 +13,8 @@ SECRET_PATH="database/mysql"
 SECRET_FIELD="password"
 SECRET_VALUE="openbao-smoke-pass-v1"
 SECRET_VALUE_ROTATED="openbao-smoke-pass-v2"
-COMPOSE_FILE="$(dirname "$0")/smoke-openbao-compose.yml"
-POLICY_FILE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/vault_conf/admin.hcl"
+COMPOSE_FILE="$(cd "$(dirname "$0")" && pwd)/smoke-openbao-compose.yml"
+POLICY_FILE="$(git -C "$(cd "$(dirname "$0")" && pwd)" rev-parse --show-toplevel)/vault_conf/admin.hcl"
 
 # Cleanup trap
 cleanup() {
@@ -40,8 +38,7 @@ docker run -d \
 # Wait for OpenBao to be ready
 info "Waiting for OpenBao to be ready..."
 elapsed=0
-until docker exec "${OPENBAO_CONTAINER}" \
-        bao status -address="http://127.0.0.1:8200" &>/dev/null; do
+until docker exec "${OPENBAO_CONTAINER}" bao status -address="http://127.0.0.1:8200" >/dev/null 2>&1; do
     sleep 2
     elapsed=$((elapsed + 2))
     [ "${elapsed}" -lt 30 ] || die "OpenBao did not become ready within 30s."
@@ -70,14 +67,13 @@ info "Getting auth token from OpenBao..."
 OPENBAO_TOKEN=$(docker exec "${OPENBAO_CONTAINER}" \
     env BAO_ADDR="http://127.0.0.1:8200" BAO_TOKEN="${OPENBAO_ROOT_TOKEN}" \
     bao token create \
-        -policy="smoke-policy" \
-        -field=token)
+    -policy="smoke-policy" \
+    -field=token)
 success "Got auth token: ${OPENBAO_TOKEN}"
 
 # Put the auth token in the plugin
 info "Building plugin and setting OpenBao auth token..."
 build_plugin
-
 docker plugin set "${PLUGIN_NAME}" \
     SECRETS_PROVIDER="openbao" \
     OPENBAO_ADDR="${OPENBAO_ADDR}" \
@@ -89,7 +85,7 @@ docker plugin set "${PLUGIN_NAME}" \
     ENABLE_MONITORING="false"
 success "Plugin configured with OpenBao token."
 
-# Run (enable) the plugin
+# Run the plugin
 info "Enabling plugin..."
 enable_plugin
 
@@ -109,8 +105,8 @@ verify_secret "${STACK_NAME}" "app" "${SECRET_NAME}" "${SECRET_VALUE}" 60
 # Rotate the password and verify
 info "Rotating secret in OpenBao..."
 docker exec "${OPENBAO_CONTAINER}" \
+    env BAO_ADDR="http://127.0.0.1:8200" BAO_TOKEN="${OPENBAO_ROOT_TOKEN}" \
     bao kv put \
-    -address="http://127.0.0.1:8200" \
     "secret/${SECRET_PATH}" \
     "${SECRET_FIELD}=${SECRET_VALUE_ROTATED}"
 success "Secret rotated to: ${SECRET_VALUE_ROTATED}"
