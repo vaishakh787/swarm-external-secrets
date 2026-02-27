@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        provider: [vault]
+        provider: [vault,openbao]
         # openbao: add when ready
         # aws: skipped due to cost (use localstack in future #41)
 
