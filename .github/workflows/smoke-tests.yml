@@ -11,8 +11,6 @@ jobs:
     strategy:
       matrix:
         provider: [vault,openbao]
-        # openbao: add when ready
-        # aws: skipped due to cost (use localstack in future #41)
 
     steps:
       - name: Checkout
