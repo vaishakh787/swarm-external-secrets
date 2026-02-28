@@ -1,22 +1,7 @@
 #!/usr/bin/env bash
-# smoke-test-vault.sh
-# Smoke test for the HashiCorp Vault provider.
-#
-# Flow (per maintainer notes):
-#   1. Create hashicorp/vault container
-#   2. Apply policies
-#   3. Add passwords (write secrets)
-#   4. Get tmp auth token from vault
-#   5. Put auth token in plugin
-#   6. Run (enable) the plugin
-#   7. Run docker stack deploy
-#   8. Log docker service output
-#   9. Compare password == logged secret
-#  10. Rotate the password and verify
 
 set -ex
 cd -- "$(dirname -- "$0")" || exit 1
-
 source ./smoke-test-helper.sh
 
 # Configuration

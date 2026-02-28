@@ -1,25 +1,7 @@
 #!/usr/bin/env bash
-<<<<<<< Updated upstream
-=======
-# smoke-test-openbao.sh
-# Smoke test for the OpenBao provider.
-#
-# Flow (per maintainer notes):
-#   1. Create openbao container
-#   2. Apply policies
-#   3. Add passwords (write secrets)
-#   4. Get tmp auth token from openbao
-#   5. Put auth token in plugin
-#   6. Run (enable) the plugin
-#   7. Run docker stack deploy
-#   8. Log docker service output
-#   9. Compare password == logged secret
-#  10. Rotate the password and verify
 
->>>>>>> Stashed changes
 set -ex
 cd -- "$(dirname -- "$0")" || exit 1
-
 source ./smoke-test-helper.sh
 
 # Configuration
