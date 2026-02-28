@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
+# smoke-test-vault.sh
+# Smoke test for the HashiCorp Vault provider.
+#
+# Flow (per maintainer notes):
+#   1. Create hashicorp/vault container
+#   2. Apply policies
+#   3. Add passwords (write secrets)
+#   4. Get tmp auth token from vault
+#   5. Put auth token in plugin
+#   6. Run (enable) the plugin
+#   7. Run docker stack deploy
+#   8. Log docker service output
+#   9. Compare password == logged secret
+#  10. Rotate the password and verify
+
 set -ex
 cd -- "$(dirname -- "$0")" || exit 1
+
 source ./smoke-test-helper.sh
 
 # Configuration
@@ -38,7 +54,8 @@ docker run -d \
 # Wait for Vault to be ready
 info "Waiting for Vault to be ready..."
 elapsed=0
-until docker exec "${VAULT_CONTAINER}" vault status -address="http://127.0.0.1:8200" >/dev/null 2>&1; do
+until docker exec "${VAULT_CONTAINER}" \
+        vault status -address="http://127.0.0.1:8200" &>/dev/null; do
     sleep 2
     elapsed=$((elapsed + 2))
     [ "${elapsed}" -lt 30 ] || die "Vault did not become ready within 30s."
@@ -67,13 +84,14 @@ info "Getting auth token from Vault..."
 VAULT_TOKEN=$(docker exec "${VAULT_CONTAINER}" \
     env VAULT_ADDR="http://127.0.0.1:8200" VAULT_TOKEN="${VAULT_ROOT_TOKEN}" \
     vault token create \
-    -policy="smoke-policy" \
-    -field=token)
+        -policy="smoke-policy" \
+        -field=token)
 success "Got auth token: ${VAULT_TOKEN}"
 
 # Put the auth token in the plugin
 info "Building plugin and setting Vault auth token..."
 build_plugin
+
 docker plugin set "${PLUGIN_NAME}" \
     SECRETS_PROVIDER="vault" \
     VAULT_ADDR="${VAULT_ADDR}" \
@@ -120,4 +138,4 @@ log_stack "${STACK_NAME}" "app"
 info "Verifying rotated secret value..."
 verify_secret "${STACK_NAME}" "app" "${SECRET_NAME}" "${SECRET_VALUE_ROTATED}" 60
 
-success "Vault smoke test PASSED"
+success "Vault smoke test PASSED (incl. rotation)"
