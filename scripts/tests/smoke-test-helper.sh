@@ -28,28 +28,28 @@ build_plugin() {
     fi
 
     echo -e "${RED}Build the plugin${DEF}"
-    docker build -t swarm-external-secrets:temp ../
+    docker build -f "${REPO_ROOT}/Dockerfile" -t swarm-external-secrets:temp "${REPO_ROOT}"
 
     echo -e "${RED}Create plugin rootfs${DEF}"
-    mkdir -p ./plugin/rootfs
+    mkdir -p "${REPO_ROOT}/plugin/rootfs"
 
     if docker ps -a --format '{{.Names}}' | grep -q '^temp-container$'; then
         docker rm -f temp-container || true
     fi
 
     docker create --name temp-container swarm-external-secrets:temp
-    docker export temp-container | tar -x -C ./plugin/rootfs
+    docker export temp-container | tar -x -C "${REPO_ROOT}/plugin/rootfs"
     docker rm  temp-container
     docker rmi swarm-external-secrets:temp
 
     echo -e "${RED}Copy config to plugin directory${DEF}"
-    cp ../config.json ./plugin/
+    cp "${REPO_ROOT}/config.json" "${REPO_ROOT}/plugin/"
 
     echo -e "${RED}Create the plugin${DEF}"
-    docker plugin create "${PLUGIN_NAME}" ./plugin
+    docker plugin create "${PLUGIN_NAME}" "${REPO_ROOT}/plugin"
 
     echo -e "${RED}Clean up plugin directory${DEF}"
-    rm -rf ./plugin
+    rm -rf "${REPO_ROOT}/plugin"
 
     success "Plugin built: ${PLUGIN_NAME}"
 }
