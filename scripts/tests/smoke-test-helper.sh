@@ -109,7 +109,7 @@ log_stack() {
     docker service logs "${stack_name}_${service_suffix}" 2>&1 || true
 }
 
-# Compare password == logged secret (from your notes)
+# Compare password == logged secret 
 verify_secret() {
     local stack_name="$1"
     local service_suffix="$2"
