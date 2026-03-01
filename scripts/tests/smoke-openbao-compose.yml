@@ -23,8 +23,8 @@ secrets:
   smoke_secret:
     driver: swarm-external-secrets:latest
     labels:
-      vault_path: "database/mysql"
-      vault_field: "password"
+      openbao_path: "database/mysql"
+      openbao_field: "password"
 
 networks:
   smoke-network:

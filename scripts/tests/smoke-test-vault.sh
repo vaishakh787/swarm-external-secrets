@@ -14,7 +14,7 @@ SECRET_PATH="database/mysql"
 SECRET_FIELD="password"
 SECRET_VALUE="vault-smoke-pass-v1"
 SECRET_VALUE_ROTATED="vault-smoke-pass-v2"
-COMPOSE_FILE="$(dirname "$0")/smoke-vault-compose.yml"
+COMPOSE_FILE="scripts/tests/smoke-vault-compose.yml"
 POLICY_FILE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/vault_conf/admin.hcl"
 
 # Cleanup trap

@@ -14,7 +14,7 @@ SECRET_PATH="database/mysql"
 SECRET_FIELD="password"
 SECRET_VALUE="openbao-smoke-pass-v1"
 SECRET_VALUE_ROTATED="openbao-smoke-pass-v2"
-COMPOSE_FILE="$(cd "$(dirname "$0")" && pwd)/smoke-openbao-compose.yml"
+COMPOSE_FILE="scripts/tests/smoke-openbao-compose.yml"
 POLICY_FILE="$(git -C "$(cd "$(dirname "$0")" && pwd)" rev-parse --show-toplevel)/vault_conf/admin.hcl"
 
 # Cleanup trap
