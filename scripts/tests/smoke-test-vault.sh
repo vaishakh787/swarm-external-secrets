@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 set -ex
-cd -- "$(dirname -- "$0")" || exit 1
-source ./smoke-test-helper.sh
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+REPO_ROOT="$(realpath -- "${SCRIPT_DIR}/../..")"
+# shellcheck source=smoke-test-helper.sh
+source "${SCRIPT_DIR}/smoke-test-helper.sh"
 
 # Configuration
 VAULT_CONTAINER="smoke-vault"
@@ -14,8 +16,8 @@ SECRET_PATH="database/mysql"
 SECRET_FIELD="password"
 SECRET_VALUE="vault-smoke-pass-v1"
 SECRET_VALUE_ROTATED="vault-smoke-pass-v2"
-COMPOSE_FILE="scripts/tests/smoke-vault-compose.yml"
-POLICY_FILE="vault_conf/admin.hcl"
+COMPOSE_FILE="${SCRIPT_DIR}/smoke-vault-compose.yml"
+POLICY_FILE="${REPO_ROOT}/vault_conf/admin.hcl"
 
 # Cleanup trap
 cleanup() {
